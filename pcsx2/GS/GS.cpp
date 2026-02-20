@@ -1023,7 +1023,9 @@ void GSgetTitleStats(std::string& info)
 	static constexpr const char* deinterlace_modes[] = {
 		"Automatic", "None", "Weave tff", "Weave bff", "Bob tff", "Bob bff", "Blend tff", "Blend bff", "Adaptive tff", "Adaptive bff"};
 
-	const char* api_name = GSDevice::RenderAPIToString(g_gs_device->GetRenderAPI());
+	const char* api_name = (GSCurrentRenderer == GSRendererType::ParallelGS)
+			? "paraLLEl-GS"
+			: GSDevice::RenderAPIToString(g_gs_device->GetRenderAPI());
 	const char* hw_sw_name = (GSCurrentRenderer == GSRendererType::Null) ? " Null" : (GSIsHardwareRenderer() ? " HW" : " SW");
 	const char* deinterlace_mode = deinterlace_modes[static_cast<int>(GSConfig.InterlaceMode)];
 
