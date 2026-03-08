@@ -389,7 +389,7 @@ public:
 		void EnableDisplays(GSRegPMODE pmode, GSRegSMODE2 smode2, bool smodetoggle);
 
 		void CheckSameSource();
-		
+
 		bool FrameWrap();
 
 		// If the start point of both frames match, we can do a single read
@@ -441,7 +441,7 @@ public:
 	virtual void Reset(bool hardware_reset);
 	virtual void UpdateSettings(const Pcsx2Config::GSOptions& old_config);
 
-	void Flush(GSFlushReason reason);
+	virtual void Flush(GSFlushReason reason);
 	u32 CalcMask(int exp, int max_exp);
 	void FlushPrim();
 	bool TestDrawChanged();
@@ -462,20 +462,20 @@ public:
 
 	void SoftReset(u32 mask);
 	void WriteCSR(u32 csr) { m_regs->CSR.U32[1] = csr; }
-	void ReadFIFO(u8* mem, int size);
+	virtual void ReadFIFO(u8* mem, int size);
 	void ReadLocalMemoryUnsync(u8* mem, int qwc, GIFRegBITBLTBUF BITBLTBUF, GIFRegTRXPOS TRXPOS, GIFRegTRXREG TRXREG);
-	template<int index> void Transfer(const u8* mem, u32 size);
-	int Freeze(freezeData* fd, bool sizeonly);
-	int Defrost(const freezeData* fd);
+	virtual void Transfer(const u8* mem, u32 size);
+	virtual int Freeze(freezeData* fd, bool sizeonly);
+	virtual int Defrost(const freezeData* fd);
 
-	u8* GetRegsMem() const { return reinterpret_cast<u8*>(m_regs); }
+	virtual u8* GetRegsMem() const { return reinterpret_cast<u8*>(m_regs); }
 	void SetRegsMem(u8* basemem) { m_regs = reinterpret_cast<GSPrivRegSet*>(basemem); }
 
 	void DumpDrawInfo(bool dump_regs, bool dump_verts, bool dump_transfers);
 	void DumpVertices(const std::string& filename);
 	void DumpTransferList(const std::string& filename);
 	void DumpTransferImages();
-	
+
 	template<bool shuffle_check>
 	bool TrianglesAreQuadsImpl();
 	bool TrianglesAreQuads(bool shuffle_check = false);

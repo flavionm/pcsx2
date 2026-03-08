@@ -4,8 +4,10 @@
 #pragma once
 
 #include "../Vulkan/VKLoaderPlatformDefines.h"
+#include "GS/GSVector.h"
 #include "SaveState.h"
 #include "GS/GSDump.h"
+#include "GS/Renderers/Common/GSRenderer.h"
 #include "Config.h"
 #include "common/WindowInfo.h"
 #include "gs_interface.hpp"
@@ -13,7 +15,7 @@
 #include "context.hpp"
 #include "wsi.hpp"
 
-class GSRendererPGS final : private Vulkan::WSIPlatform
+class GSRendererPGS final : private Vulkan::WSIPlatform, public GSRenderer
 {
 public:
 	explicit GSRendererPGS(u8 *basemem);
@@ -23,24 +25,28 @@ public:
 	void ResizeWindow(int width, int height, float scale);
 	const WindowInfo &GetWindowInfo() const;
 	void SetVSyncMode(GSVSyncMode mode, bool allow_present_throttle);
-	void Reset(bool hardware_reset);
+	void Reset(bool hardware_reset) override;
 
-	void Transfer(const u8 *mem, u32 size);
+	void Transfer(const u8 *mem, u32 size) override;
 
-	void VSync(u32 field, bool registers_written);
+	void Flush(GSFlushReason reason) override;
+	void VSync(u32 field, bool registers_written, bool idle_frame) override;
 	inline ParallelGS::GSInterface &get_interface() { return iface; };
-	void ReadFIFO(u8 *mem, u32 size);
+	void ReadFIFO(u8 *mem, int size) override;
 
-	void UpdateConfig();
+	void UpdateSettings(const Pcsx2Config::GSOptions& old_config) override;
 
-	void GetInternalResolution(int *width, int *height);
+	GSVector2i GetInternalResolution() override;
 
-	int Freeze(freezeData *data, bool sizeonly);
-	int Defrost(freezeData *data);
+	int Freeze(freezeData *data, bool sizeonly) override;
+	int Defrost(const freezeData *data) override;
 
-	u8 *GetRegsMem();
+	u8 *GetRegsMem() const override;
 
 	void QueueSnapshot(const std::string &path, u32 gsdump_frames);
+
+	void Draw() override;
+	GSTexture* GetOutput(int i, float& scale, int& y_offset) override;
 
 private:
 	VkSurfaceKHR create_surface(VkInstance instance, VkPhysicalDevice gpu) override;
