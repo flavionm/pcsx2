@@ -4,6 +4,7 @@
 #include "GSRendererPGS.h"
 #include "GS/GSState.h"
 #include "GS.h"
+#include "GS/GSVector.h"
 #include "math.hpp"
 #include "muglm/muglm_impl.hpp"
 #include "shaders/slangmosh.hpp"
@@ -178,7 +179,7 @@ GSRendererPGS::GSRendererPGS(u8 *basemem)
 	wsi.set_backbuffer_format(BackbufferFormat::sRGB);
 }
 
-u8 *GSRendererPGS::GetRegsMem()
+u8 *GSRendererPGS::GetRegsMem() const
 {
 	return reinterpret_cast<u8 *>(priv);
 }
@@ -257,7 +258,7 @@ void GSRendererPGS::Reset(bool /*hardware_reset*/)
 	iface.reset_context_state();
 }
 
-void GSRendererPGS::UpdateConfig()
+void GSRendererPGS::UpdateSettings(const Pcsx2Config::GSOptions& old_config)
 {
 	auto parsed = parse_super_sampling_options(GSConfig.PGSSuperSampling);
 
@@ -389,7 +390,7 @@ int GSRendererPGS::Freeze(freezeData* data, bool sizeonly)
 	return 0;
 }
 
-int GSRendererPGS::Defrost(freezeData* data)
+int GSRendererPGS::Defrost(const freezeData* data)
 {
 	constexpr uint32_t expected_version = 8; // v9 doesn't add anything meaningful for us.
 
@@ -484,7 +485,7 @@ int GSRendererPGS::Defrost(freezeData* data)
 	return 0;
 }
 
-void GSRendererPGS::VSync(u32 field, bool registers_written)
+void GSRendererPGS::VSync(u32 field, bool registers_written, bool /* idle_frame */)
 {
 	if (dump)
 	{
@@ -660,17 +661,16 @@ void GSRendererPGS::Transfer(const u8* mem, u32 size)
 		dump->Transfer(3, mem, size);
 }
 
-void GSRendererPGS::ReadFIFO(u8 *mem, u32 size)
+void GSRendererPGS::ReadFIFO(u8 *mem, int size)
 {
 	iface.read_transfer_fifo(mem, size);
 	if (dump)
 		dump->ReadFIFO(size);
 }
 
-void GSRendererPGS::GetInternalResolution(int *width, int *height)
+GSVector2i GSRendererPGS::GetInternalResolution()
 {
-	*width = int(last_internal_width);
-	*height = int(last_internal_height);
+	return GSVector2i(last_internal_width, last_internal_height);
 }
 
 bool GSRendererPGS::UpdateWindow()
@@ -853,4 +853,18 @@ const VkApplicationInfo *GSRendererPGS::get_application_info()
 	static const VkApplicationInfo app = { VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr,
 	                                       "pcsx2", 0, "Granite", 0, VK_API_VERSION_1_3 };
 	return &app;
+}
+
+void GSRendererPGS::Draw() {
+	Console.Warning("paraLLEl-GS Draw method called, stub implementation");
+}
+
+GSTexture* GSRendererPGS::GetOutput(int i, float& scale, int& y_offset) {
+	Console.Warning("paraLLEl-GS GetOutput method called, stub implementation");
+	return nullptr;
+}
+
+void GSRendererPGS::Flush(GSFlushReason /* reason */) {
+	// Console.Warning("paraLLEl-GS Flush method called, stub implementation");
+	// Do nothing, flush will be called internally when needed
 }

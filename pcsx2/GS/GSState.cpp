@@ -2810,14 +2810,9 @@ void GSState::ReadbackTextureCache()
 {
 }
 
-template void GSState::Transfer<0>(const u8* mem, u32 size);
-template void GSState::Transfer<1>(const u8* mem, u32 size);
-template void GSState::Transfer<2>(const u8* mem, u32 size);
-template void GSState::Transfer<3>(const u8* mem, u32 size);
-
-template <int index>
 void GSState::Transfer(const u8* mem, u32 size)
 {
+	const int index = 3;
 	const u8* start = mem;
 
 	GIFPath& path = m_path[index];

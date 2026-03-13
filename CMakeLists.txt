@@ -2,6 +2,8 @@
 # versions as well, avoiding setting policies.
 cmake_minimum_required(VERSION 3.16...3.25)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Enabling this cmake policy gets rid of warnings regarding LTO.
 cmake_policy(SET CMP0069 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
