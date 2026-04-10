@@ -20,6 +20,7 @@ enum class RenderAPI
 	Metal,
 	D3D12,
 	Vulkan,
+	Granite,
 	OpenGL
 };
 
@@ -67,9 +68,6 @@ void GSwriteCSR(u32 csr);
 void GSInitAndReadFIFO(u8* mem, u32 size);
 void GSReadLocalMemoryUnsync(u8* mem, u32 qwc, u64 BITBLITBUF, u64 TRXPOS, u64 TRXREG);
 void GSgifTransfer(const u8* mem, u32 size);
-void GSgifTransfer1(u8* mem, u32 addr);
-void GSgifTransfer2(u8* mem, u32 size);
-void GSgifTransfer3(u8* mem, u32 size);
 void GSvsync(u32 field, bool registers_written);
 int GSfreeze(FreezeAction mode, freezeData* data);
 std::string GSGetBaseSnapshotFilename();
@@ -109,6 +107,8 @@ void GSSetSoftwareRendering(bool software_renderer, GSInterlaceMode new_interlac
 bool GSSaveSnapshotToMemory(u32 window_width, u32 window_height, bool apply_aspect, bool crop_borders,
 	u32* width, u32* height, std::vector<u32>* pixels);
 void GSJoinSnapshotThreads();
+
+float GetCurrentAspectRatioFloat(bool is_progressive);
 
 namespace Host
 {

@@ -1,5 +1,11 @@
 // SPDX-FileCopyrightText: 2002-2026 PCSX2 Dev Team
 // SPDX-License-Identifier: GPL-3.0+
+//
+#include "GS/Renderers/Common/GSRenderer.h"
+#ifdef HAVE_PARALLEL_GS
+#include "GS/Renderers/parallel-gs/GSRendererPGS.h"
+#include "GS/Renderers/parallel-gs/GSDevicePGS.h"
+#endif
 
 #include "Config.h"
 #include "Counters.h"
@@ -58,6 +64,9 @@ Pcsx2Config::GSOptions GSConfig;
 
 static GSRendererType GSCurrentRenderer;
 
+struct FileDeleter { void operator()(FILE *file) { if (file) fclose(file); } };
+std::unique_ptr<FILE, FileDeleter> g_gs_stream;
+
 GSRendererType GSGetCurrentRenderer()
 {
 	return GSCurrentRenderer;
@@ -84,6 +93,11 @@ static RenderAPI GetAPIForRenderer(GSRendererType renderer)
 
 		case GSRendererType::VK:
 			return RenderAPI::Vulkan;
+
+#ifdef HAVE_PARALLEL_GS
+		case GSRendererType::ParallelGS:
+			return RenderAPI::Granite;
+#endif
 
 #ifdef _WIN32
 		case GSRendererType::DX11:
@@ -132,6 +146,12 @@ static bool OpenGSDevice(GSRendererType renderer, bool clear_state_on_fail, bool
 #ifdef ENABLE_VULKAN
 		case RenderAPI::Vulkan:
 			g_gs_device = std::make_unique<GSDeviceVK>();
+			break;
+#endif
+
+#ifdef HAVE_PARALLEL_GS
+		case RenderAPI::Granite:
+			g_gs_device = std::make_unique<GSDevicePGS>();
 			break;
 #endif
 
@@ -208,6 +228,17 @@ static bool OpenGSRenderer(GSRendererType renderer, u8* basemem)
 	{
 		g_gs_renderer = std::make_unique<GSRendererNull>();
 	}
+#ifdef HAVE_PARALLEL_GS
+	else if (renderer == GSRendererType::ParallelGS)
+	{
+		g_gs_renderer = std::make_unique<GSRendererPGS>(basemem);
+		if (!((GSRendererPGS*) g_gs_renderer.get())->Init())
+		{
+			g_gs_renderer.reset();
+			return false;
+		}
+	}
+#endif
 	else if (renderer != GSRendererType::SW)
 	{
 		GSClampUpscaleMultiplier(GSConfig);
@@ -415,22 +446,7 @@ void GSReadLocalMemoryUnsync(u8* mem, u32 qwc, u64 BITBLITBUF, u64 TRXPOS, u64 T
 
 void GSgifTransfer(const u8* mem, u32 size)
 {
-	g_gs_renderer->Transfer<3>(mem, size);
-}
-
-void GSgifTransfer1(u8* mem, u32 addr)
-{
-	g_gs_renderer->Transfer<0>(const_cast<u8*>(mem) + addr, (0x4000 - addr) / 16);
-}
-
-void GSgifTransfer2(u8* mem, u32 size)
-{
-	g_gs_renderer->Transfer<1>(const_cast<u8*>(mem), size);
-}
-
-void GSgifTransfer3(u8* mem, u32 size)
-{
-	g_gs_renderer->Transfer<2>(const_cast<u8*>(mem), size);
+	g_gs_renderer->Transfer(mem, size);
 }
 
 void GSvsync(u32 field, bool registers_written)
@@ -606,6 +622,19 @@ std::vector<GSAdapterInfo> GSGetAdapterInfo(GSRendererType renderer)
 			ret = GSDeviceVK::GetAdapterInfo();
 		}
 		break;
+#endif
+
+#ifdef HAVE_PARALLEL_GS
+		case GSRendererType::ParallelGS:
+		{
+			// Dummy info.
+			GSAdapterInfo adapter = {};
+			adapter.name = "default";
+			adapter.fullscreen_modes = { "fullscreen" };
+			adapter.max_texture_size = 4096;
+			adapter.max_upscale_multiplier = 4;
+			return { adapter };
+		}
 #endif
 
 #ifdef __APPLE__
