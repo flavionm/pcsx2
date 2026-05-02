@@ -12,6 +12,7 @@
 #include "device.hpp"
 #include "context.hpp"
 #include "wsi.hpp"
+#include "analog_video.hpp"
 
 class GSRendererPGS final : private Vulkan::WSIPlatform
 {
@@ -85,4 +86,7 @@ private:
 
 	std::unique_ptr<GSDumpBase> dump;
 	uint32_t dump_frames = 0;
+
+	ParallelGS::AnalogVideoFilter analog_filter;
+	ParallelGS::CRTFilter crt_filter;
 };
